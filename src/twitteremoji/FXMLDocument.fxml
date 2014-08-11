@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="389.0" prefWidth="761.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="twitteremoji.FXMLDocumentController">
+   <children>
+      <Pane prefHeight="392.0" prefWidth="554.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <HBox spacing="50.0">
+               <children>
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="Emoji Links List" />
+                        <TableView fx:id="linksTableView" prefHeight="300.0" prefWidth="200.0">
+                           <columns>
+                              <TableColumn prefWidth="101.0" text="From" />
+                              <TableColumn prefWidth="98.0" text="To" />
+                           </columns>
+                        </TableView>
+                        <HBox spacing="20.0">
+                           <children>
+                              <Button fx:id="importLinksButton" disable="true" mnemonicParsing="false" prefWidth="90.0" text="Import" />
+                              <Button fx:id="exportLinksButton" disable="true" layoutX="10.0" layoutY="337.0" mnemonicParsing="false" prefWidth="90.0" text="Export" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="Link Crawler" />
+                        <TableView fx:id="crawlerTableView" prefHeight="300.0" prefWidth="470.0">
+                           <columns>
+                              <TableColumn prefWidth="91.0" text="Aquired" />
+                              <TableColumn prefWidth="289.0" text="Tweet" />
+                              <TableColumn minWidth="0.0" prefWidth="89.0" text="Emoji" />
+                           </columns>
+                        </TableView>
+                        <HBox spacing="20.0">
+                           <children>
+                              <Button fx:id="crawlButton" mnemonicParsing="false" onAction="#handleCrawlAction" prefWidth="90.0" text="Crawl..." />
+                              <Button fx:id="stopButton" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefWidth="90.0" text="Stop" />
+                              <Label fx:id="statusLabel" text="Status: Disconnected" HBox.hgrow="ALWAYS">
+                                 <HBox.margin>
+                                    <Insets top="7.0" />
+                                 </HBox.margin>
+                              </Label>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets left="20.0" top="10.0" />
+               </padding>
+            </HBox>
+         </children>
+      </Pane>
+   </children>
+</AnchorPane>

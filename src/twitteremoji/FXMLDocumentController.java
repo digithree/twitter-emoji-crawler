@@ -12,21 +12,31 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.DateFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
@@ -38,6 +48,12 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 import twitter4j.auth.RequestToken;
+
+
+/*
+ * EmojiSymbols Font (c)blockworks - Kenichi Kaneko
+ * http://emojisymbols.com/
+*/
 
 /**
  *
@@ -61,6 +77,8 @@ public class FXMLDocumentController implements Initializable {
     private Button stopButton;
     @FXML
     private Label statusLabel;
+    private Stage stage;
+    
     private String STATUS_PREFIX = "Status: ";
     private String STATUS_DISCONNECTED = "Disconnected";
     private String STATUS_CONNECTED = "Connected";
@@ -72,12 +90,45 @@ public class FXMLDocumentController implements Initializable {
     private final String key = "kw7vAK9UXvweweys0CF09MkKh";
     private final String secret = "Q4dzY6WBQC3FKNWarEXBeK3qlRyKoMupwUaX3vGOoFkxr4Uko3";
     
+    // crawler
+    private boolean crawling = false;
+    private Status lastTweet = null;
+    private final ObservableList<StatusWrapper> crawlerTableData =
+        FXCollections.observableArrayList();   
+    
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // nothing!
+        Font.loadFont( FXMLDocumentController.class.getResource("EmojiSymbols-Regular.ttf").toExternalForm(), 10 );
+        //firstNameCol.setCellValueFactory(new PropertyValueFactory<Person,String>("firstName"));
+        for( Object tc : crawlerTableView.getColumns() ) {
+            TableColumn tableColumn = (TableColumn)tc;
+            tableColumn.setCellValueFactory(new PropertyValueFactory<StatusWrapper,String>(
+                    tableColumn.getText().toLowerCase()
+            ));
+            // experimental word wrap
+            /*
+            tableColumn.setCellFactory(new Callback<TableColumn<StatusWrapper, String>,
+                    TableCell<StatusWrapper, String>>() {
+                @Override
+                public TableCell<StatusWrapper, String> call(TableColumn<StatusWrapper, String> param) {
+                    TableCell<StatusWrapper, String> cell = new TableCell<>();
+                    Text text = new Text();
+                    cell.setGraphic(text);
+                    cell.setPrefHeight(Control.USE_COMPUTED_SIZE);
+                    text.wrappingWidthProperty().bind(cell.widthProperty());
+                    text.textProperty().bind(cell.itemProperty());
+                    return cell;
+                }
+
+            });
+            */
+        }
+        crawlerTableView.setItems(crawlerTableData);
     }
     
     public void setup(Stage stage) {
+        this.stage = stage;
         try {
             // start twitter auth process
             twitter = TwitterFactory.getSingleton();
@@ -192,6 +243,48 @@ public class FXMLDocumentController implements Initializable {
                 statusLabel.setText(STATUS_PREFIX+STATUS_CRAWLING);
             }
         });
+        
+        if( lastTweet == null ) {
+            Platform.runLater(new Runnable() {
+                @Override public void run() {
+                    // get search term
+                    Optional<String> responsePin = Dialogs.create()
+                            .owner(stage)
+                            .title("Search term")
+                            .masthead("Seed the crawler with a search term")
+                            .message("Search term:")
+                            .showTextInput();
+                    String term = null;
+                    if(responsePin.isPresent()) {
+                        term = responsePin.get();
+                    } else {
+                        Dialogs.create()
+                                .owner(null)
+                                .title("Error")
+                                .masthead(null)
+                                .message("Invalid input")
+                                .showError();
+                        return;
+                    }
+                    startCrawling(term);
+                }
+            });
+        } else {
+            /*
+            Platform.runLater(new Runnable() {
+                @Override public void run() {
+
+                }
+            });
+            */
+        }
+        
+        (new Thread() {
+            public void run() {
+                // crawler
+            }
+        }).start();
+        /*
         try {
             Query query = new Query("Cocaine");
             QueryResult result;
@@ -203,5 +296,43 @@ public class FXMLDocumentController implements Initializable {
         } catch (TwitterException te) {
             statusLabel.setText(STATUS_PREFIX+STATUS_ERROR);
         }
+        */
+    }
+    
+    private void startCrawling(String term) {
+        crawling = true;
+        (new Thread() {
+            public void run() {
+                try {
+                    // crawler
+                    // just do once for debugging
+                    //while(crawling) {
+                    Query query = new Query(term);
+                    QueryResult result;
+                    result = twitter.search(query);
+                    List<Status> tweets = result.getTweets();
+                    for (Status tweet : tweets) {
+                        //String emoji = cleanTweetLeaveEmoji(tweet.getText());
+                        crawlerTableData.add(new StatusWrapper(
+                                DateFormat.getDateTimeInstance().format(tweet.getCreatedAt()),
+                                tweet.getUser().getName(),
+                                tweet.getText(),
+                                ""
+                        ));
+                    }
+                    //}
+                } catch (TwitterException ex) {
+                    statusLabel.setText(STATUS_PREFIX+STATUS_ERROR);
+                }
+            }
+        }).start();
+    }
+    
+    private String cleanTweetLeaveEmoji(String tweetText) {
+        String emoji = "";
+        for( int i = 0 ; i < tweetText.length() ; i++ ) {            
+            
+        }
+        return emoji;
     }
 }
